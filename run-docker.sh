@@ -86,10 +86,11 @@ build_image() {
 
 run_container() {
     print_info "Starting OpenCode split-screen TUI..."
-    print_info "Project directory: $PROJECT_DIR"
+    print_info "Project directory: $PROJECT_DIR (accessible in terminal as /project)"
     print_info "Data directory: $DATA_DIR"
     print_info ""
     print_info "Use Ctrl+W to switch between terminal and OpenCode panes"
+    print_info "In the terminal pane, run: cd /project"
     print_info "Press Ctrl+C twice to exit"
     print_info ""
 
@@ -101,12 +102,11 @@ run_container() {
     fi
 
     # Run the container
-    # Mount project directory to /project to avoid overwriting the built app
+    # Mount project directory to /project but run from /app where everything is built
     docker run -it --rm \
         $ENV_FILE \
         -v "$DATA_DIR:/root/.opencode" \
         -v "$PROJECT_DIR:/project" \
-        -w /project \
         --hostname opencode \
         "$IMAGE_NAME" \
         "$@"
@@ -114,10 +114,10 @@ run_container() {
 
 run_shell() {
     print_info "Opening shell in OpenCode container..."
+    print_info "Your project is mounted at: /project"
     docker run -it --rm \
         -v "$DATA_DIR:/root/.opencode" \
         -v "$PROJECT_DIR:/project" \
-        -w /project \
         --entrypoint /bin/bash \
         "$IMAGE_NAME"
 }

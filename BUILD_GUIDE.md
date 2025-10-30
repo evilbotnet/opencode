@@ -131,7 +131,12 @@ git pull origin claude/split-screen-layout-011CUcXUndUWo1T6eT5XW7vt
 ./run-docker.sh run
 ```
 
-The issue was that the project directory was mounted to `/workspace`, overwriting the built application. It now mounts to `/project` instead.
+**What was wrong:** The container was trying to run OpenCode from the mounted project directory instead of from `/app` where it was built with all dependencies.
+
+**How it works now:**
+- OpenCode runs from `/app` (has all node_modules)
+- Your project is mounted at `/project`
+- In the terminal pane, run `cd /project` to access your files
 
 ## 🔧 If Build Still Fails
 

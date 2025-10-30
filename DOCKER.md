@@ -114,7 +114,7 @@ Once the container is running, you'll see the split-screen interface:
 
 ### Working with Projects
 
-The container has the OpenCode application installed in `/app`, and your project directory is mounted to `/project`:
+The OpenCode application runs from `/app` (where all dependencies are installed), and your project directory is mounted to `/project`:
 
 ```bash
 # Using docker-compose (mounts current directory to /project)
@@ -127,11 +127,14 @@ docker-compose run --rm -v /path/to/project:/project opencode
 docker run -it --rm \
   --env-file .env \
   -v /path/to/project:/project \
-  -w /project \
   opencode-split-screen:latest
 ```
 
-**Important:** Don't mount to `/workspace` or `/app` as this will overwrite the built application!
+**Important:**
+- OpenCode runs from `/app` (don't change working directory!)
+- Your project is accessible in the terminal pane at `/project`
+- In the terminal pane, run `cd /project` to access your files
+- Don't mount to `/app` as this will overwrite the built application!
 
 ### Persisting Configuration
 
@@ -178,30 +181,44 @@ docker-compose run --rm \
 
 If you see errors like:
 ```
-error: ENOENT while resolving package 'zod' from '/workspace/packages/opencode/src/provider/models.ts'
+error: ENOENT while resolving package 'zod' from '/project/packages/opencode/src/mcp/index.ts'
 error: Cannot find module '@modelcontextprotocol/sdk/client/streamableHttp.js'
 ```
 
-**Cause:** The project directory is being mounted over the built application, losing the installed `node_modules`.
+**Cause:** OpenCode is trying to run from the mounted project directory instead of from `/app` where it was built with all dependencies.
 
-**Solution:** This has been fixed. Make sure you have the latest docker-compose.yml and run-docker.sh:
+**Solution:** Make sure you have the latest version and don't specify a working directory:
 
 ```bash
 git pull origin claude/split-screen-layout-011CUcXUndUWo1T6eT5XW7vt
 ./run-docker.sh run
 ```
 
-The updated configuration mounts your project to `/project` instead of `/workspace`, preserving the built application in `/app`.
+**Key points:**
+- OpenCode must run from `/app` (where it was built)
+- Your project is mounted at `/project` (accessible in terminal pane)
+- Don't use `-w` or `working_dir` flags that change to `/project`
 
-**Manual fix if needed:**
+**Correct usage:**
 ```bash
-# Don't mount to /workspace or /app
+# ✅ Good - Let OpenCode run from /app
+docker run -it --rm \
+  --env-file .env \
+  -v $(pwd):/project \
+  opencode-split-screen:latest
+
+# ❌ Bad - Don't change working directory
 docker run -it --rm \
   --env-file .env \
   -v $(pwd):/project \
   -w /project \
   opencode-split-screen:latest
 ```
+
+**In the container:**
+- OpenCode runs from `/app` (has all dependencies)
+- Terminal pane starts in `/app`
+- Run `cd /project` in terminal to access your files
 
 ### Build Error: Go mod download fails (input/go.mod: no such file or directory)
 
