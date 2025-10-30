@@ -86,6 +86,10 @@ COPY sst.config.ts ./
 COPY sst-env.d.ts ./
 COPY tsconfig.json ./
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Set environment variables
 ENV NODE_ENV=production
 ENV OPENCODE_SERVER=http://localhost:3000
@@ -101,6 +105,6 @@ EXPOSE 3000
 # Ensure we always start in /app
 WORKDIR /app
 
-# Default command runs the TUI with absolute path
-ENTRYPOINT ["bun", "run", "/app/packages/opencode/src/index.ts"]
+# Use the entrypoint script that starts server + TUI
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD []
