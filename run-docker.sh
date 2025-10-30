@@ -13,6 +13,7 @@ NC='\033[0m' # No Color
 IMAGE_NAME="opencode-split-screen:latest"
 PROJECT_DIR="${PROJECT_DIR:-$(pwd)}"
 DATA_DIR="${DATA_DIR:-$HOME/.opencode}"
+DOCKERFILE="${DOCKERFILE:-Dockerfile}"
 
 # Functions
 print_info() {
@@ -44,6 +45,7 @@ OPTIONS:
     -p, --project DIR    Project directory to mount (default: current directory)
     -d, --data DIR       OpenCode data directory (default: ~/.opencode)
     -i, --image NAME     Docker image name (default: opencode-split-screen:latest)
+    -f, --file FILE      Dockerfile to use (default: Dockerfile)
     -h, --help           Show this help message
 
 ENVIRONMENT VARIABLES:
@@ -77,7 +79,8 @@ check_docker() {
 
 build_image() {
     print_info "Building Docker image: $IMAGE_NAME"
-    docker build -t "$IMAGE_NAME" .
+    print_info "Using Dockerfile: $DOCKERFILE"
+    docker build -f "$DOCKERFILE" -t "$IMAGE_NAME" .
     print_info "Build complete!"
 }
 
@@ -154,6 +157,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -i|--image)
             IMAGE_NAME="$2"
+            shift 2
+            ;;
+        -f|--file)
+            DOCKERFILE="$2"
             shift 2
             ;;
         -h|--help)

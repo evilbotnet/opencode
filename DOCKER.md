@@ -2,6 +2,18 @@
 
 This guide explains how to deploy OpenCode with the split-screen terminal feature using Docker.
 
+## ⚠️ Common Build Issues - Quick Fix
+
+If you encounter a **Python/tree-sitter-bash build error**, use the alternative Dockerfile:
+
+```bash
+./run-docker.sh -f Dockerfile.alternative build
+# or
+docker build -f Dockerfile.alternative -t opencode-split-screen:latest .
+```
+
+See [Troubleshooting](#troubleshooting) section for more details.
+
 ## Features
 
 The Docker deployment includes:
@@ -145,6 +157,40 @@ docker-compose run --rm \
 
 ## Troubleshooting
 
+### Build Error: Python not found / tree-sitter-bash fails
+
+If you encounter an error like:
+```
+gyp ERR! find Python
+gyp ERR! find Python Python is not set from command line or npm configuration
+error: install script from "tree-sitter-bash" exited with 1
+```
+
+**Solution 1: Use the updated Dockerfile**
+
+The issue has been fixed in the latest Dockerfile which includes Python and build tools. Make sure you have the latest version:
+
+```bash
+git pull origin claude/split-screen-layout-011CUcXUndUWo1T6eT5XW7vt
+./run-docker.sh build
+```
+
+**Solution 2: Use the alternative Dockerfile**
+
+If the main Dockerfile still fails, use the alternative version which has more comprehensive build dependencies:
+
+```bash
+# Using the helper script
+./run-docker.sh -f Dockerfile.alternative build
+
+# Using docker directly
+docker build -f Dockerfile.alternative -t opencode-split-screen:latest .
+```
+
+**Solution 3: Build without frozen lockfile**
+
+If you're still having issues, the alternative Dockerfile doesn't use `--frozen-lockfile`, which can help with dependency resolution issues.
+
 ### Terminal doesn't render properly
 
 Ensure your terminal supports:
@@ -184,6 +230,27 @@ docker run -it --rm \
   -v $(pwd):/workspace \
   opencode-split-screen:latest
 ```
+
+### Build takes too long
+
+The Docker build includes compiling native modules which can take time. To speed up:
+
+1. Use Docker BuildKit (enabled by default in newer Docker versions)
+2. Ensure you have enough RAM allocated to Docker (4GB recommended)
+3. On first build, it downloads all dependencies - subsequent builds use cache
+
+### Architecture-specific issues (ARM64/Apple Silicon)
+
+If you're on Apple Silicon (M1/M2/M3) or ARM64:
+
+1. The build should work but may take longer
+2. If you encounter issues, try building with platform specification:
+
+```bash
+docker build --platform linux/arm64 -t opencode-split-screen:latest .
+```
+
+3. Some dependencies might need Rosetta 2 on macOS - ensure it's installed
 
 ## Building from Source
 
