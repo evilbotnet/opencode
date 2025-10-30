@@ -50,6 +50,8 @@ go.mod: open /build/packages/tui/input/go.mod: no such file or directory
 
 | Commit | What It Fixed |
 |--------|--------------|
+| `325a95f` | **NEW** - Forward terminal messages and fix split-screen layout rendering |
+| `94b0e05` | Updated documentation with all fixes |
 | `bfd4c49` | Added proper server health check and startup wait (30s timeout) |
 | `7b08047` | Bypass TypeScript wrapper and run pre-built TUI binary directly |
 | `bdb8dd8` | Use absolute path in ENTRYPOINT and clarify project mounting |
@@ -175,6 +177,24 @@ panic: Get "http://localhost:3000/project/current": dial tcp [::1]:3000: connect
 2. Waits up to 30 seconds for server health check to pass
 3. Only then starts the TUI client
 4. If server fails to start, exits with error message
+
+### Error: Terminal pane shows no output / OpenCode pane formatted incorrectly ✅ FIXED
+
+If you see:
+- Left pane (terminal) is completely blank with no shell prompt
+- Right pane (OpenCode AI chat) is illegible or weirdly formatted
+
+**Status:** Fixed in commit `325a95f`
+
+**What was wrong:**
+1. Terminal messages (PTY output) weren't being forwarded from the main TUI to the terminal component
+2. The layout was double-styling the terminal pane causing width calculation issues
+
+**How it works now:**
+- All messages including `TerminalOutputMsg` are now forwarded to the terminal component
+- Terminal pane uses its own styling without additional wrapping
+- Proper width calculations account for borders and padding
+- Shell prompt and output should now display correctly in the left pane
 
 ## 🔧 If Build Still Fails
 
