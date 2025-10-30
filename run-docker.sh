@@ -101,11 +101,12 @@ run_container() {
     fi
 
     # Run the container
+    # Mount project directory to /project to avoid overwriting the built app
     docker run -it --rm \
         $ENV_FILE \
         -v "$DATA_DIR:/root/.opencode" \
-        -v "$PROJECT_DIR:/workspace" \
-        -w /workspace \
+        -v "$PROJECT_DIR:/project" \
+        -w /project \
         --hostname opencode \
         "$IMAGE_NAME" \
         "$@"
@@ -115,8 +116,8 @@ run_shell() {
     print_info "Opening shell in OpenCode container..."
     docker run -it --rm \
         -v "$DATA_DIR:/root/.opencode" \
-        -v "$PROJECT_DIR:/workspace" \
-        -w /workspace \
+        -v "$PROJECT_DIR:/project" \
+        -w /project \
         --entrypoint /bin/bash \
         "$IMAGE_NAME"
 }

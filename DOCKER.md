@@ -114,18 +114,24 @@ Once the container is running, you'll see the split-screen interface:
 
 ### Working with Projects
 
-Mount your project directory when running:
+The container has the OpenCode application installed in `/app`, and your project directory is mounted to `/project`:
 
 ```bash
-# Using docker-compose
-docker-compose run --rm -v /path/to/project:/workspace opencode
+# Using docker-compose (mounts current directory to /project)
+docker-compose run --rm opencode
+
+# Mount a specific project directory
+docker-compose run --rm -v /path/to/project:/project opencode
 
 # Using docker directly
 docker run -it --rm \
-  -v /path/to/project:/workspace \
-  -w /workspace \
+  --env-file .env \
+  -v /path/to/project:/project \
+  -w /project \
   opencode-split-screen:latest
 ```
+
+**Important:** Don't mount to `/workspace` or `/app` as this will overwrite the built application!
 
 ### Persisting Configuration
 
@@ -167,6 +173,35 @@ docker-compose run --rm \
 ```
 
 ## Troubleshooting
+
+### Runtime Error: Cannot find module / ENOENT while resolving package
+
+If you see errors like:
+```
+error: ENOENT while resolving package 'zod' from '/workspace/packages/opencode/src/provider/models.ts'
+error: Cannot find module '@modelcontextprotocol/sdk/client/streamableHttp.js'
+```
+
+**Cause:** The project directory is being mounted over the built application, losing the installed `node_modules`.
+
+**Solution:** This has been fixed. Make sure you have the latest docker-compose.yml and run-docker.sh:
+
+```bash
+git pull origin claude/split-screen-layout-011CUcXUndUWo1T6eT5XW7vt
+./run-docker.sh run
+```
+
+The updated configuration mounts your project to `/project` instead of `/workspace`, preserving the built application in `/app`.
+
+**Manual fix if needed:**
+```bash
+# Don't mount to /workspace or /app
+docker run -it --rm \
+  --env-file .env \
+  -v $(pwd):/project \
+  -w /project \
+  opencode-split-screen:latest
+```
 
 ### Build Error: Go mod download fails (input/go.mod: no such file or directory)
 

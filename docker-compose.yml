@@ -18,13 +18,14 @@ services:
     volumes:
       # Persist OpenCode data
       - opencode-data:/root/.opencode
-      # Mount your project directory (change /path/to/your/project)
-      - ./:/workspace
-    working_dir: /workspace
+      # Mount your project directory to /project (not /workspace to avoid overwriting built app)
+      # Change this path to your actual project directory
+      - .:/project
+    working_dir: /project
     ports:
       - "3000:3000"
     # Keep container running
-    command: ["--help"]
+    command: []
 
 volumes:
   opencode-data:

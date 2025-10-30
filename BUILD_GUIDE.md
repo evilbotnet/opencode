@@ -115,6 +115,24 @@ docker run -it --rm \
   opencode-split-screen:latest
 ```
 
+## 🔧 If You Get Runtime Errors
+
+### Error: "Cannot find module" or "ENOENT while resolving package"
+
+If you see errors like:
+```
+error: ENOENT while resolving package 'zod'
+error: Cannot find module '@modelcontextprotocol/sdk/client/streamableHttp.js'
+```
+
+**Fix:** Pull the latest changes (this was fixed):
+```bash
+git pull origin claude/split-screen-layout-011CUcXUndUWo1T6eT5XW7vt
+./run-docker.sh run
+```
+
+The issue was that the project directory was mounted to `/workspace`, overwriting the built application. It now mounts to `/project` instead.
+
 ## 🔧 If Build Still Fails
 
 ### Try the alternative Dockerfile:
