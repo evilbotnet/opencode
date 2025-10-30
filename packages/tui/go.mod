@@ -36,6 +36,7 @@ require (
 	github.com/charmbracelet/x/exp/slice v0.0.0-20250327172914-2fdc97757edf // indirect
 	github.com/charmbracelet/x/input v0.3.7 // indirect
 	github.com/charmbracelet/x/windows v0.2.1 // indirect
+	github.com/creack/pty v1.1.24 // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
 	github.com/getkin/kin-openapi v0.127.0 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect

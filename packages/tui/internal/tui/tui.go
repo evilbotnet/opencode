@@ -25,6 +25,7 @@ import (
 	"github.com/sst/opencode/internal/components/dialog"
 	"github.com/sst/opencode/internal/components/modal"
 	"github.com/sst/opencode/internal/components/status"
+	"github.com/sst/opencode/internal/components/terminal"
 	"github.com/sst/opencode/internal/components/toast"
 	"github.com/sst/opencode/internal/layout"
 	"github.com/sst/opencode/internal/styles"
@@ -77,6 +78,10 @@ type Model struct {
 	interruptKeyState    InterruptKeyState
 	exitKeyState         ExitKeyState
 	messagesRight        bool
+	// Split-screen mode fields
+	splitScreenEnabled   bool
+	terminal             interface{}
+	terminalFocused      bool
 }
 
 func (a Model) Init() tea.Cmd {
@@ -92,6 +97,13 @@ func (a Model) Init() tea.Cmd {
 	cmds = append(cmds, a.status.Init())
 	cmds = append(cmds, a.completions.Init())
 	cmds = append(cmds, a.toastManager.Init())
+
+	// Initialize terminal if split-screen is enabled
+	if a.splitScreenEnabled && a.terminal != nil {
+		if term, ok := a.terminal.(tea.Model); ok {
+			cmds = append(cmds, term.Init())
+		}
+	}
 
 	return tea.Batch(cmds...)
 }
@@ -191,7 +203,28 @@ func (a Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return a, cmd
 		}
 
-		// 2. Check for commands that require leader
+		// 2. Handle pane switching in split-screen mode
+		if a.splitScreenEnabled && keyString == "ctrl+w" {
+			a.terminalFocused = !a.terminalFocused
+			if a.terminalFocused {
+				a.editor.Blur()
+				if term, ok := a.terminal.(terminal.TerminalComponent); ok {
+					updatedTerm, cmd := term.Focus()
+					a.terminal = updatedTerm
+					cmds = append(cmds, cmd)
+				}
+			} else {
+				if term, ok := a.terminal.(terminal.TerminalComponent); ok {
+					term.Blur()
+				}
+				updated, cmd := a.editor.Focus()
+				a.editor = updated.(chat.EditorComponent)
+				cmds = append(cmds, cmd)
+			}
+			return a, tea.Batch(cmds...)
+		}
+
+		// 3. Check for commands that require leader
 		if a.app.IsLeaderSequence {
 			matches := a.app.Commands.Matches(msg, a.app.IsLeaderSequence)
 			a.app.IsLeaderSequence = false
@@ -680,6 +713,15 @@ func (a Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				Width: container,
 			},
 		}
+
+		// Update terminal size if split-screen is enabled
+		if a.splitScreenEnabled && a.terminal != nil {
+			if term, ok := a.terminal.(tea.Model); ok {
+				updatedTerm, cmd := term.Update(msg)
+				a.terminal = updatedTerm
+				cmds = append(cmds, cmd)
+			}
+		}
 	case app.SessionSelectedMsg:
 		updated, cmd := a.messages.Update(msg)
 		a.messages = updated.(chat.MessagesComponent)
@@ -885,9 +927,21 @@ func (a Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 	a.status = s.(status.StatusComponent)
 
-	updatedEditor, cmd := a.editor.Update(msg)
-	a.editor = updatedEditor.(chat.EditorComponent)
-	cmds = append(cmds, cmd)
+	// Update terminal if split-screen is enabled and terminal is focused
+	if a.splitScreenEnabled && a.terminalFocused && a.terminal != nil {
+		if term, ok := a.terminal.(tea.Model); ok {
+			updatedTerm, cmd := term.Update(msg)
+			a.terminal = updatedTerm
+			cmds = append(cmds, cmd)
+		}
+	}
+
+	// Only update editor if terminal is not focused
+	if !a.terminalFocused {
+		updatedEditor, cmd := a.editor.Update(msg)
+		a.editor = updatedEditor.(chat.EditorComponent)
+		cmds = append(cmds, cmd)
+	}
 
 	updatedMessages, cmd := a.messages.Update(msg)
 	a.messages = updatedMessages.(chat.MessagesComponent)
@@ -915,21 +969,65 @@ func (a Model) View() (string, *tea.Cursor) {
 
 	var editorX int
 	var editorY int
-	if a.app.Session.ID == "" {
-		mainLayout, editorX, editorY = a.home()
+
+	if a.splitScreenEnabled {
+		// Split-screen mode: terminal on left, opencode on right
+		var opencodePane string
+		if a.app.Session.ID == "" {
+			opencodePane, editorX, editorY = a.home()
+		} else {
+			opencodePane, editorX, editorY = a.chat()
+		}
+
+		// Get terminal view
+		terminalPane := ""
+		if a.terminal != nil {
+			if term, ok := a.terminal.(tea.ViewModel); ok {
+				terminalPane = term.View()
+			}
+		}
+
+		// Render split-screen layout
+		leftPaneWidth := a.width / 2
+		rightPaneWidth := a.width - leftPaneWidth
+
+		// Apply styling to panes
+		leftPane := styles.NewStyle().
+			Width(leftPaneWidth).
+			Height(a.height).
+			Background(t.Background()).
+			Render(terminalPane)
+
+		rightPane := styles.NewStyle().
+			Width(rightPaneWidth).
+			Height(a.height).
+			Background(t.Background()).
+			Padding(0, 2).
+			Render(opencodePane)
+
+		mainLayout = lipgloss.JoinHorizontal(lipgloss.Top, leftPane, rightPane)
+
+		// Adjust cursor position for split-screen
+		editorX += leftPaneWidth + 2
+
 	} else {
-		mainLayout, editorX, editorY = a.chat()
+		// Original single-pane mode
+		if a.app.Session.ID == "" {
+			mainLayout, editorX, editorY = a.home()
+		} else {
+			mainLayout, editorX, editorY = a.chat()
+		}
+		mainLayout = styles.NewStyle().
+			Background(t.Background()).
+			Padding(0, 2).
+			Render(mainLayout)
+		mainLayout = lipgloss.PlaceHorizontal(
+			a.width,
+			lipgloss.Center,
+			mainLayout,
+			styles.WhitespaceStyle(t.Background()),
+		)
 	}
-	mainLayout = styles.NewStyle().
-		Background(t.Background()).
-		Padding(0, 2).
-		Render(mainLayout)
-	mainLayout = lipgloss.PlaceHorizontal(
-		a.width,
-		lipgloss.Center,
-		mainLayout,
-		styles.WhitespaceStyle(t.Background()),
-	)
 
 	mainStyle := styles.NewStyle().Background(t.Background())
 	mainLayout = mainStyle.Render(mainLayout)
@@ -1560,6 +1658,9 @@ func NewModel(app *app.App) tea.Model {
 		leaderBinding = &binding
 	}
 
+	// Initialize terminal component
+	term := terminal.NewTerminalComponent(80, 24)
+
 	model := &Model{
 		status:               status.NewStatusCmp(app),
 		app:                  app,
@@ -1575,6 +1676,9 @@ func NewModel(app *app.App) tea.Model {
 		toastManager:         toast.NewToastManager(),
 		interruptKeyState:    InterruptKeyIdle,
 		exitKeyState:         ExitKeyIdle,
+		splitScreenEnabled:   true,
+		terminal:             term,
+		terminalFocused:      false,
 	}
 
 	return model
