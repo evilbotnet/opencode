@@ -959,6 +959,15 @@ func (a Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	}
 
+	// Forward messages to terminal if split-screen is enabled
+	if a.splitScreenEnabled && a.terminal != nil {
+		if term, ok := a.terminal.(tea.Model); ok {
+			updatedTerm, cmd := term.Update(msg)
+			a.terminal = updatedTerm
+			cmds = append(cmds, cmd)
+		}
+	}
+
 	return a, tea.Batch(cmds...)
 }
 
@@ -991,12 +1000,8 @@ func (a Model) View() (string, *tea.Cursor) {
 		leftPaneWidth := a.width / 2
 		rightPaneWidth := a.width - leftPaneWidth
 
-		// Apply styling to panes
-		leftPane := styles.NewStyle().
-			Width(leftPaneWidth).
-			Height(a.height).
-			Background(t.Background()).
-			Render(terminalPane)
+		// Apply minimal styling to panes (terminal already has its own styling)
+		leftPane := terminalPane
 
 		rightPane := styles.NewStyle().
 			Width(rightPaneWidth).

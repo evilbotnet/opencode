@@ -186,9 +186,15 @@ func (m *terminalComponent) View() string {
 		content += strings.Repeat("\n", m.height-lineCount)
 	}
 
-	// Apply styling
+	// Apply styling with proper sizing for borders and padding
+	// Account for: border (2 cols) + padding (2 cols) = 4 cols total
+	contentWidth := m.width - 4
+	if contentWidth < 1 {
+		contentWidth = 1
+	}
+
 	terminalStyle := styles.NewStyle().
-		Width(m.width - 4).
+		Width(contentWidth).
 		Height(m.height).
 		Background(t.Background()).
 		Foreground(t.Text()).
