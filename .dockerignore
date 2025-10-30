@@ -1,0 +1,57 @@
+# Git
+.git
+.gitignore
+.github
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Node
+node_modules
+.turbo
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist
+build
+*.exe
+packages/tui/cmd/opencode/dist
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage
+*.test
+
+# Misc
+.env
+.env.local
+.env.*.local
+*.md
+!README.md
+STATS.md
+CONTRIBUTING.md
+AGENTS.md
+LICENSE
+
+# Husky
+.husky
+
+# Scripts
+script
+infra
+specs

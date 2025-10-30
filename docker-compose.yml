@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  opencode:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: opencode-split-screen:latest
+    container_name: opencode
+    stdin_open: true
+    tty: true
+    environment:
+      - OPENCODE_SERVER=http://localhost:3000
+      - SHELL=/bin/bash
+      # Add your API keys here or use .env file
+      # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      # - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      # Persist OpenCode data
+      - opencode-data:/root/.opencode
+      # Mount your project directory (change /path/to/your/project)
+      - ./:/workspace
+    working_dir: /workspace
+    ports:
+      - "3000:3000"
+    # Keep container running
+    command: ["--help"]
+
+volumes:
+  opencode-data:
+    driver: local
