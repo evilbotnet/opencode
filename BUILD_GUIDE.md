@@ -50,8 +50,11 @@ go.mod: open /build/packages/tui/input/go.mod: no such file or directory
 
 | Commit | What It Fixed |
 |--------|--------------|
-| `a8cacfb` | Added Python, g++, make for tree-sitter-bash compilation |
-| `012700e` | Fixed Go module local replace directives issue |
+| `bfd4c49` | Added proper server health check and startup wait (30s timeout) |
+| `7b08047` | Bypass TypeScript wrapper and run pre-built TUI binary directly |
+| `bdb8dd8` | Use absolute path in ENTRYPOINT and clarify project mounting |
+| `64f1d3d` | Remove working directory override to run OpenCode from /app |
+| `647b284` | Resolve module resolution errors by changing volume mount path |
 
 ## 📦 Files You Now Have
 
@@ -77,7 +80,7 @@ git branch
 
 # Check latest commit
 git log --oneline -1
-# Should show: 012700e fix: resolve Go mod download error...
+# Should show: bfd4c49 fix: add proper server health check and startup wait
 
 # Check files exist
 ls -la Dockerfile run-docker.sh .env.example
@@ -125,7 +128,7 @@ docker run -it --rm \
 
 ## 🔧 If You Get Runtime Errors
 
-### Error: "Cannot find module" or "ENOENT while resolving package"
+### Error: "Cannot find module" or "ENOENT while resolving package" ✅ FIXED
 
 If you see errors like:
 ```
@@ -133,11 +136,7 @@ error: ENOENT while resolving package 'zod'
 error: Cannot find module '@modelcontextprotocol/sdk/client/streamableHttp.js'
 ```
 
-**Fix:** Pull the latest changes (this was fixed):
-```bash
-git pull origin claude/split-screen-layout-011CUcXUndUWo1T6eT5XW7vt
-./run-docker.sh run
-```
+**Status:** Fixed in commits `647b284`, `64f1d3d`, `bdb8dd8`
 
 **What was wrong:** The container was trying to run OpenCode from the mounted project directory instead of from `/app` where it was built with all dependencies.
 
@@ -145,6 +144,37 @@ git pull origin claude/split-screen-layout-011CUcXUndUWo1T6eT5XW7vt
 - OpenCode runs from `/app` (has all node_modules)
 - Your project is mounted at `/project`
 - In the terminal pane, run `cd /project` to access your files
+
+### Error: "bun: command not found: go" ✅ FIXED
+
+If you see:
+```
+bun: command not found: go
+ShellError: Failed with exit code 1
+```
+
+**Status:** Fixed in commit `7b08047`
+
+**What was wrong:** On M2 Mac (ARM64), the TypeScript wrapper was trying to build the Go TUI binary at runtime, but Go wasn't installed in the runtime container.
+
+**How it works now:** The Go TUI binary is pre-built during the Docker build stage and executed directly via `/usr/local/bin/opencode-tui`, bypassing the TypeScript wrapper.
+
+### Error: "dial tcp [::1]:3000: connect: connection refused" ✅ FIXED
+
+If you see:
+```
+panic: Get "http://localhost:3000/project/current": dial tcp [::1]:3000: connect: connection refused
+```
+
+**Status:** Fixed in commit `bfd4c49`
+
+**What was wrong:** The TUI was starting before the server was fully ready to accept connections.
+
+**How it works now:** The entrypoint script now:
+1. Starts the server in background
+2. Waits up to 30 seconds for server health check to pass
+3. Only then starts the TUI client
+4. If server fails to start, exits with error message
 
 ## 🔧 If Build Still Fails
 
@@ -221,8 +251,11 @@ Progress you should see:
 
 | Issue | Solution |
 |-------|----------|
-| Build fails with Python error | Fixed in commit `a8cacfb` - git pull |
-| Build fails with go.mod error | Fixed in commit `012700e` - git pull |
+| Build fails with Python error | Fixed - git pull latest changes |
+| Build fails with go.mod error | Fixed - git pull latest changes |
+| Module resolution errors (ENOENT) | Fixed in commit `647b284` - git pull |
+| "command not found: go" error | Fixed in commit `7b08047` - git pull |
+| Connection refused on port 3000 | Fixed in commit `bfd4c49` - git pull |
 | Build still fails | Use `./run-docker.sh -f Dockerfile.alternative build` |
 | Container exits immediately | Make sure you use `-it` flags |
 | Terminal looks weird | Set `-e TERM=xterm-256color` |
