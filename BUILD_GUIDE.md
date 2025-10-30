@@ -1,5 +1,7 @@
 # Quick Build Guide - OpenCode Split-Screen Docker
 
+> **Note:** This implementation now uses **tmux** for split-screen functionality instead of a custom Go implementation. See [TMUX_GUIDE.md](TMUX_GUIDE.md) for tmux keyboard shortcuts and customization options.
+
 ## 🎯 TL;DR - Just Build It!
 
 ```bash
@@ -239,11 +241,20 @@ Once running, you'll see the split-screen interface:
 Press Ctrl+W to switch between panes
 ```
 
-## ⌨️ Keyboard Shortcuts
+## ⌨️ Keyboard Shortcuts (Tmux)
 
-- **Ctrl+W** - Switch between terminal and AI panes
-- **Ctrl+C** - Interrupt (works in both panes)
-- **Ctrl+D** or type `exit` twice - Exit OpenCode
+### Essential
+- **Ctrl+B then O** - Switch between terminal and OpenCode panes
+- **Ctrl+B then [** - Enter scroll mode (use arrows to scroll, 'q' to exit)
+- **Ctrl+B then z** - Zoom current pane (toggle fullscreen)
+
+### More Shortcuts
+- **Ctrl+B then Arrow** - Navigate to specific pane
+- **Ctrl+B then Ctrl+Arrow** - Resize panes
+- **Ctrl+B then ?** - Show all tmux keybindings
+- **Ctrl+D** - Exit current pane/shell
+
+See [TMUX_GUIDE.md](TMUX_GUIDE.md) for complete tmux documentation and customization.
 
 ## 📊 Expected Build Time
 

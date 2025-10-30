@@ -55,6 +55,7 @@ RUN apt-get update && apt-get install -y \
     bash \
     procps \
     curl \
+    tmux \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -78,9 +79,10 @@ COPY sst.config.ts ./
 COPY sst-env.d.ts ./
 COPY tsconfig.json ./
 
-# Copy entrypoint script
+# Copy entrypoint and tmux scripts
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY tmux-start.sh /app/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh /app/tmux-start.sh
 
 # Set environment variables
 ENV NODE_ENV=production

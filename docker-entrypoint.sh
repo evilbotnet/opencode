@@ -1,5 +1,5 @@
 #!/bin/bash
-# Docker entrypoint script for OpenCode split-screen
+# Docker entrypoint script for OpenCode with tmux split-screen
 
 set -e
 
@@ -32,6 +32,6 @@ fi
 # Set server URL for TUI
 export OPENCODE_SERVER="http://localhost:3000"
 
-# Run the pre-built TUI binary with split-screen support
-echo "Starting OpenCode TUI with split-screen..."
-exec /usr/local/bin/opencode-tui "$@"
+# Launch tmux with split-screen layout
+echo "Starting OpenCode with tmux split-screen..."
+exec /app/tmux-start.sh "$@"
