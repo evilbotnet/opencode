@@ -4,21 +4,15 @@ FROM golang:1.24-bookworm AS go-builder
 
 WORKDIR /build
 
-# Copy Go modules
-COPY packages/tui/go.mod packages/tui/go.sum ./packages/tui/
-COPY packages/sdk/go/go.mod packages/sdk/go/go.sum ./packages/sdk/go/
+# Copy all Go source code (needed for local replace directives)
+COPY packages/tui ./packages/tui
+COPY packages/sdk/go ./packages/sdk/go
 
 # Download Go dependencies
 WORKDIR /build/packages/tui
 RUN go mod download
 
-# Copy TUI source code
-WORKDIR /build
-COPY packages/tui ./packages/tui
-COPY packages/sdk/go ./packages/sdk/go
-
 # Build the TUI binary with split-screen support
-WORKDIR /build/packages/tui
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-w -s" \
     -o /tui \

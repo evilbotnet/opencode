@@ -4,12 +4,23 @@ This guide explains how to deploy OpenCode with the split-screen terminal featur
 
 ## ⚠️ Common Build Issues - Quick Fix
 
+### Build Error 1: Python/tree-sitter-bash
+
 If you encounter a **Python/tree-sitter-bash build error**, use the alternative Dockerfile:
 
 ```bash
 ./run-docker.sh -f Dockerfile.alternative build
 # or
 docker build -f Dockerfile.alternative -t opencode-split-screen:latest .
+```
+
+### Build Error 2: Go mod download error
+
+If you see an error about `go.mod: no such file or directory`, make sure you have the latest Dockerfile:
+
+```bash
+git pull origin claude/split-screen-layout-011CUcXUndUWo1T6eT5XW7vt
+./run-docker.sh build
 ```
 
 See [Troubleshooting](#troubleshooting) section for more details.
@@ -156,6 +167,25 @@ docker-compose run --rm \
 ```
 
 ## Troubleshooting
+
+### Build Error: Go mod download fails (input/go.mod: no such file or directory)
+
+If you encounter an error like:
+```
+go: github.com/charmbracelet/x/input@v0.3.7 (replaced by ./input):
+reading input/go.mod: open /build/packages/tui/input/go.mod: no such file or directory
+```
+
+**Cause:** The Go module system needs local directories for replace directives before downloading dependencies.
+
+**Solution:** This has been fixed in the latest Dockerfile. Update and rebuild:
+
+```bash
+git pull origin claude/split-screen-layout-011CUcXUndUWo1T6eT5XW7vt
+./run-docker.sh build
+```
+
+The updated Dockerfile now copies all source code before running `go mod download`, which resolves local replace directives properly.
 
 ### Build Error: Python not found / tree-sitter-bash fails
 
