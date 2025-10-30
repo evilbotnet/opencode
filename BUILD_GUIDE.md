@@ -10,12 +10,20 @@ git pull origin claude/split-screen-layout-011CUcXUndUWo1T6eT5XW7vt
 cp .env.example .env
 # Edit .env and add your ANTHROPIC_API_KEY and/or OPENAI_API_KEY
 
-# 3. Build
+# 3. Build (from the opencode repository directory)
 ./run-docker.sh build
 
-# 4. Run
-./run-docker.sh run
+# 4. Run (IMPORTANT: Don't mount opencode repo to /project!)
+# Option A: Run without mounting anything (explore OpenCode)
+docker run -it --rm --env-file .env opencode-split-screen:latest
+
+# Option B: Mount your actual project directory (recommended)
+docker run -it --rm --env-file .env \
+  -v ~/my-actual-project:/project \
+  opencode-split-screen:latest
 ```
+
+**⚠️ Important:** The `./run-docker.sh run` script mounts the current directory to `/project`. If you run it from inside the opencode repository, it will cause errors! Use the docker commands above instead, or run from a different directory.
 
 That's it! 🚀
 

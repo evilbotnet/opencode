@@ -88,6 +88,9 @@ VOLUME ["/root/.opencode"]
 # Expose server port
 EXPOSE 3000
 
-# Default command runs the TUI
-ENTRYPOINT ["bun", "run", "packages/opencode/src/index.ts"]
+# Ensure we always start in /app
+WORKDIR /app
+
+# Default command runs the TUI with absolute path
+ENTRYPOINT ["bun", "run", "/app/packages/opencode/src/index.ts"]
 CMD []

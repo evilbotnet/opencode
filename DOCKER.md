@@ -120,21 +120,34 @@ The OpenCode application runs from `/app` (where all dependencies are installed)
 # Using docker-compose (mounts current directory to /project)
 docker-compose run --rm opencode
 
-# Mount a specific project directory
-docker-compose run --rm -v /path/to/project:/project opencode
+# Mount a specific project directory (recommended - mount your actual project, not the opencode repo!)
+docker-compose run --rm -v /path/to/your/project:/project opencode
 
 # Using docker directly
 docker run -it --rm \
   --env-file .env \
-  -v /path/to/project:/project \
+  -v /path/to/your/project:/project \
   opencode-split-screen:latest
 ```
 
 **Important:**
-- OpenCode runs from `/app` (don't change working directory!)
+- OpenCode runs from `/app` (built with all dependencies)
 - Your project is accessible in the terminal pane at `/project`
 - In the terminal pane, run `cd /project` to access your files
+- **Do NOT mount the opencode repository itself to /project** - mount your actual project directory
 - Don't mount to `/app` as this will overwrite the built application!
+
+**Example:**
+```bash
+# ✅ Good - mount your Python project
+docker run -it --rm -v ~/my-python-app:/project opencode-split-screen:latest
+
+# ✅ Good - mount your Node.js project
+docker run -it --rm -v ~/my-web-app:/project opencode-split-screen:latest
+
+# ❌ Bad - don't mount the opencode repo itself
+# docker run -it --rm -v ~/opencode:/project opencode-split-screen:latest
+```
 
 ### Persisting Configuration
 
